@@ -36,7 +36,7 @@ def main():
     while True:
         records_list.append(generate_record())
         if len(records_list) == 10:
-            path = os.path.join("data", "json_files", f"file_{counter}.json")
+            path = os.path.join("../data", "json_files", f"file_{counter}.json")
             print(f"writing data to {path}")
             store_json_data(path=path, data=records_list)
             records_list = []
@@ -45,7 +45,7 @@ def main():
 
 
 if __name__ == '__main__':
-    create_missing_folders(directory=os.path.join("data", "json_files"))
-    create_missing_folders(directory=os.path.join("data", "csv_files"))
-    create_missing_folders(directory=os.path.join("data", "parquet_files"))
+    create_missing_folders(directory=os.path.join("../data", "json_files"))
+    create_missing_folders(directory=os.path.join("../data", "csv_files"))
+    create_missing_folders(directory=os.path.join("../data", "parquet_files"))
     main()

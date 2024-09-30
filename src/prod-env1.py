@@ -1,11 +1,11 @@
 import os
 
+from src.utils.local.dir_paths import get_data_dir, get_json_dir, get_csv_dir, get_checkpoint_dir
+from src.utils.local.spark_session import get_spark_session
 from pyspark.sql.types import StructType, StructField, TimestampType, IntegerType, DoubleType
 
-from src.utils.local.spark_session import get_spark_session
 
-
-def get_schema():
+def get_json_schema():
     schema = StructType([
         StructField("datetime", TimestampType(), True),
         StructField("sales", StructType([
@@ -22,27 +22,28 @@ def get_schema():
 
 def main(spark):
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(base_dir, "../data")
-    json_dir = os.path.join(data_dir, "json_files")
-    csv_dir = os.path.join(data_dir, "csv_files")
-    checkpoint_dir = os.path.join(data_dir, "checkpoint_prod-env1")
+    data_dir = get_data_dir(base_dir=base_dir)
+    json_dir = get_json_dir(data_dir=data_dir)
+    csv_dir = get_csv_dir(data_dir=data_dir)
+    checkpoint_dir = get_checkpoint_dir(data_dir=data_dir, checkpoint_dir_name="checkpoint_prod-env1")
 
     json_raw_df = spark.readStream \
-        .schema(get_schema()) \
-        .json(json_dir)
+        .format("json") \
+        .schema(get_json_schema()) \
+        .load(json_dir)
 
     json_flattened_df = json_raw_df \
         .select("datetime", "sales.*", "analytics.*")
 
-    result_df = json_flattened_df \
+    flattened_result_df = json_flattened_df \
         .writeStream \
         .format("csv") \
         .option("path", csv_dir) \
         .option("checkpointLocation", checkpoint_dir) \
         .start()
 
-    result_df.awaitTermination()
+    flattened_result_df.awaitTermination()
 
 
 if __name__ == "__main__":
-    main(get_spark_session())
+    main(get_spark_session('prod-env1'))
